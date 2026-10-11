@@ -23,12 +23,21 @@ def start(cmd: list[str]) -> subprocess.Popen:
     return subprocess.Popen(cmd, cwd=ROOT)
 
 
+def api_already_running(url: str) -> bool:
+    """True if a healthy mock vendor-risk API already answers on the port (e.g. an eval run started it)."""
+    try:
+        return requests.get(url, timeout=0.5).ok
+    except requests.RequestException:
+        return False
+
+
 def wait_for_api(url: str, proc: subprocess.Popen, timeout_seconds: float = 15.0) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         if proc.poll() is not None:
             raise RuntimeError(f"Vendor-risk API exited during startup with code {proc.returncode} "
-                               "(is port 8001 already in use?)")
+                               "(is port 8001 already in use by something other than the mock API? "
+                               "Find it with: lsof -nP -iTCP:8001)")
         try:
             if requests.get(url, timeout=0.5).ok:
                 return
@@ -49,15 +58,21 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _handle_termination)
     procs: list[subprocess.Popen] = []
     try:
-        print("Starting vendor-risk API on http://127.0.0.1:8001 ...")
-        api = start([sys.executable, "-m", "uvicorn", "mock_api.app:app", "--host", "127.0.0.1", "--port", "8001"])
-        procs.append(api)
-        wait_for_api("http://127.0.0.1:8001/health", api)
-        print("Vendor-risk API is ready.")
+        if api_already_running("http://127.0.0.1:8001/health"):
+            print("Vendor-risk API is already running on http://127.0.0.1:8001 - reusing it.")
+        else:
+            print("Starting vendor-risk API on http://127.0.0.1:8001 ...")
+            api = start([sys.executable, "-m", "uvicorn", "mock_api.app:app", "--host", "127.0.0.1", "--port", "8001"])
+            procs.append(api)
+            wait_for_api("http://127.0.0.1:8001/health", api)
+            print("Vendor-risk API is ready.")
         if not args.no_ui:
             print("Starting UI on http://127.0.0.1:8501 ...")
             procs.append(start([sys.executable, "-m", "streamlit", "run", "app.py", "--server.port", "8501",
                                 "--server.headless", "true"]))
+        if not procs:
+            print("Nothing to run (API reused, --no-ui given). Exiting.")
+            return
         while True:
             time.sleep(1)
             for proc in procs:

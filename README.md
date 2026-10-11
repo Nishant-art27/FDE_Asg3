@@ -87,7 +87,7 @@ docs/                      architecture, decision memo, results, brief
 
 - `app.py` used a deprecated Streamlit argument and only printed raw JSON; replaced with the product UI.
 - `verify_setup.py` did not check the model SDK or credentials; it now reports the LLM configuration (non-fatal).
-- `run_local.py` had no API-only mode for running evals; added `--no-ui`.
+- `run_local.py` failed with a port conflict whenever the mock API was already up (e.g. started by an eval run); it now reuses a healthy API on :8001. Also added `--no-ui` for API-only runs.
 - `tests/` only covered data integrity; added policy, tools, guardrail and end-to-end tests.
 - The data snapshot intentionally conflicts for SignalWatch (registry *Approved*, service *expired*, review 456 days old) - handled as `conflicting_vendor_evidence` + `vendor_review_expired`, not as a bug.
 
