@@ -7,3 +7,4 @@ __pycache__/
 evals/results_*.csv
 data/review_log.jsonl
 .streamlit/
+!evals/results_comparison.csv
