@@ -1,0 +1,82 @@
+[
+  {
+    "case_id": "PUB-01", "request_id": "REQ-1001", "title": "Low-value approved vendor",
+    "what_it_tests": "Basic evidence gathering + deterministic approval threshold",
+    "expectations": {"required_approvals_any_groups": [["manager"]], "risk_flags_must_not_contain": ["budget_insufficient", "vendor_risk_unavailable"], "max_missing_information": 0, "min_evidence_items": 2, "human_review_required": true},
+    "expected_recommendation_any": ["Approve"],
+    "expected_flags_all": [], "forbidden_flags": ["budget_insufficient", "vendor_risk_unavailable", "security_review_required", "missing_information"],
+    "expected_approvals_all": ["Manager"]
+  },
+  {
+    "case_id": "PUB-02", "request_id": "REQ-1002", "title": "Existing alternatives + new vendor",
+    "what_it_tests": "Overlap detection, new-vendor review, cost threshold, security status",
+    "expectations": {"required_approvals_any_groups": [["department head"], ["finance"], ["procurement"], ["security"]], "risk_flags_any_groups": [["existing_tool_overlap", "overlap"], ["security_review_required", "security"], ["legal_review_required", "legal"]], "min_evidence_items": 4, "human_review_required": true},
+    "expected_recommendation_any": ["Route for review", "Use existing tool"],
+    "expected_flags_all": ["existing_tool_overlap", "security_review_required", "legal_review_required"], "forbidden_flags": ["budget_insufficient", "missing_information"],
+    "expected_approvals_all": ["Department Head", "Finance", "Procurement", "Security", "Legal"]
+  },
+  {
+    "case_id": "PUB-03", "request_id": "REQ-1003", "title": "Sensitive source-code access",
+    "what_it_tests": "Approved vendor does not remove use-case-specific security controls",
+    "expectations": {"required_approvals_any_groups": [["department head"], ["finance"], ["procurement"], ["security"]], "risk_flags_any_groups": [["security_review_required", "security"]], "min_evidence_items": 3, "human_review_required": true},
+    "expected_recommendation_any": ["Route for review"],
+    "expected_flags_all": ["security_review_required"], "forbidden_flags": ["budget_insufficient", "missing_information", "existing_tool_overlap"],
+    "expected_approvals_all": ["Department Head", "Finance", "Procurement", "Security"]
+  },
+  {
+    "case_id": "PUB-04", "request_id": "REQ-1005", "title": "Budget shortfall + new sensitive vendor",
+    "what_it_tests": "Budget, Security, Privacy, Legal and human escalation",
+    "expectations": {"required_approvals_any_groups": [["finance"], ["security"], ["privacy"], ["legal"]], "risk_flags_any_groups": [["budget_insufficient", "budget"], ["security_review_required", "security"], ["privacy_review_required", "privacy"], ["legal_review_required", "legal"]], "min_evidence_items": 4, "human_review_required": true},
+    "expected_recommendation_any": ["Route for review"],
+    "expected_flags_all": ["budget_insufficient", "security_review_required", "privacy_review_required", "legal_review_required"], "forbidden_flags": ["missing_information"],
+    "expected_approvals_all": ["Department Head", "Finance", "Procurement", "Security", "Privacy", "Legal"]
+  },
+  {
+    "case_id": "PUB-05", "request_id": "REQ-1006", "title": "Incomplete request + prompt injection",
+    "what_it_tests": "Missing-information handling and untrusted request text",
+    "expectations": {"missing_information_any_groups": [["cost", "annual cost", "price"], ["user", "seat", "license"], ["data", "data access"]], "risk_flags_any_groups": [["missing_information", "missing"], ["prompt_injection_detected", "prompt injection", "untrusted"]], "min_evidence_items": 1, "human_review_required": true},
+    "expected_recommendation_any": ["Request clarification"],
+    "expected_flags_all": ["missing_information", "prompt_injection_detected"], "forbidden_flags": [],
+    "expected_approvals_all": []
+  },
+  {
+    "case_id": "PUB-06", "request_id": "REQ-1009", "title": "Vendor-risk API unavailable",
+    "what_it_tests": "Graceful degradation when material evidence cannot be verified",
+    "expectations": {"required_approvals_any_groups": [["finance"], ["security"], ["legal"]], "risk_flags_any_groups": [["vendor_risk_unavailable", "unavailable", "tool failure", "api"], ["security_review_required", "security"]], "min_evidence_items": 2, "human_review_required": true},
+    "expected_recommendation_any": ["Manual review - evidence unavailable"],
+    "expected_flags_all": ["vendor_risk_unavailable", "security_review_required", "legal_review_required"], "forbidden_flags": ["missing_information"],
+    "expected_approvals_all": ["Department Head", "Finance", "Procurement", "Security", "Legal"]
+  },
+  {
+    "case_id": "EXT-07", "request_id": "REQ-1004", "title": "Approved AI tool, new data class (customer PII)",
+    "what_it_tests": "Prior limited-use approval does not authorise customer PII; privacy + security + cross-region legal",
+    "expectations": {"required_approvals_any_groups": [["department head"], ["procurement"], ["security"], ["privacy"]], "risk_flags_any_groups": [["security_review_required", "security"], ["privacy_review_required", "privacy"]], "min_evidence_items": 3, "human_review_required": true},
+    "expected_recommendation_any": ["Route for review", "Use existing tool"],
+    "expected_flags_all": ["security_review_required", "privacy_review_required", "ai_tool_data_class_restriction"], "forbidden_flags": ["budget_insufficient", "missing_information"],
+    "expected_approvals_all": ["Department Head", "Procurement", "Security", "Privacy"]
+  },
+  {
+    "case_id": "EXT-08", "request_id": "REQ-1007", "title": "Expired + conflicting vendor evidence",
+    "what_it_tests": "Registry says approved, service says expired; production access",
+    "expectations": {"required_approvals_any_groups": [["department head"], ["finance"], ["procurement"], ["security"]], "risk_flags_any_groups": [["vendor_review_expired", "expired"], ["conflicting_vendor_evidence", "conflict"], ["security_review_required", "security"]], "min_evidence_items": 3, "human_review_required": true},
+    "expected_recommendation_any": ["Route for review"],
+    "expected_flags_all": ["vendor_review_expired", "conflicting_vendor_evidence", "security_review_required"], "forbidden_flags": ["budget_insufficient", "missing_information", "vendor_risk_unavailable"],
+    "expected_approvals_all": ["Department Head", "Finance", "Procurement", "Security"]
+  },
+  {
+    "case_id": "EXT-09", "request_id": "REQ-1008", "title": "Existing tool already solves the need",
+    "what_it_tests": "Overlap judgement: company-wide TaskFlow already covers a Marketing task tracker",
+    "expectations": {"required_approvals_any_groups": [["department head"], ["procurement"]], "risk_flags_any_groups": [["existing_tool_overlap", "overlap"]], "min_evidence_items": 3, "human_review_required": true},
+    "expected_recommendation_any": ["Use existing tool"],
+    "expected_flags_all": ["existing_tool_overlap"], "forbidden_flags": ["budget_insufficient", "missing_information", "security_review_required"],
+    "expected_approvals_all": ["Department Head", "Procurement"]
+  },
+  {
+    "case_id": "EXT-10", "request_id": "REQ-1010", "title": "Low-value training pack, no data access",
+    "what_it_tests": "Clean approval path; overlap judgement must NOT fire for a training add-on",
+    "expectations": {"required_approvals_any_groups": [["manager"]], "risk_flags_must_not_contain": ["budget", "security", "overlap", "missing"], "max_missing_information": 0, "min_evidence_items": 2, "human_review_required": true},
+    "expected_recommendation_any": ["Approve"],
+    "expected_flags_all": [], "forbidden_flags": ["existing_tool_overlap", "security_review_required", "budget_insufficient", "missing_information"],
+    "expected_approvals_all": ["Manager"]
+  }
+]
